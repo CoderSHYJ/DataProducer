@@ -5,7 +5,7 @@ import java.util.Map;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-
+import java.util.concurrent.LinkedBlockingQueue;
 class Message {
 	Map<String,String>content;
 	public Message(Map<String,String>content) {
@@ -31,21 +31,28 @@ class Message {
 
 class Topic {
 	String name; // 主题名称
-	List<Message> messages = new ArrayList<>(); // 存储消息的列表
+	LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>(); // 存储消息的列表
 
 	public Topic(String name) {
 		this.name = name;
 	}
 
 	public synchronized void produce(Message message) {
-		messages.add(message);
+		try {
+			messages.put(message);
+		} catch (InterruptedException ignored) {
+		}
 	}
 
 	public synchronized Message consume() {
-		if (!messages.isEmpty()) {
-			return messages.remove(0);
+		try {
+			if (!messages.isEmpty()) {
+				return messages.take();
+			}
+			return null;
+		} catch (InterruptedException e) {
+			return null;
 		}
-		return null;
 	}
 }
 

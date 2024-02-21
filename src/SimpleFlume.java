@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.Time;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class SimpleFlume {
 	public static void main(String[] args) {
@@ -34,18 +35,19 @@ class Event {
 
 
 class Channel {
-	private Queue<Event> queue;
+	private LinkedBlockingQueue<Event> queue;
 
 	public Channel() {
-		this.queue = new LinkedList<>();
+		this.queue = new LinkedBlockingQueue<>();
 	}
 
 	public void put(Event event) {
 		queue.offer(event);
-		System.out.println("send: " + event.getContent());
+		//System.out.println("Put: channel has : "+queue.size());
 	}
 
 	public Event take() {
+		//System.out.println("Take: channel has : "+queue.size());
 		return queue.poll();
 	}
 }
