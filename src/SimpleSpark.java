@@ -3,16 +3,22 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class SimpleSpark {
 	private static final String host = "localhost";
 	private static final int port = 8082;
+	private static final HashSet ignoreBS = new HashSet() {
+		{
+			add("forbiddenBS");
+			add("lac456");
+		}
+	};
 
 	public static void main(String[] args) {
-		// 模拟生产者产生消息
-		Producer producer = new Producer();
 		Map<String, String> content = null;
 		while (true) {
 			content = sendRequest("{\"action\":\"consume\",\"topic\":\"topic_bs\"}");
@@ -20,6 +26,9 @@ public class SimpleSpark {
 			if (content != null) {
 				// 处理数据
 				Map<String, String> result = processData(content);
+				if(result==null){
+					continue;
+				}
 				String jsonString = "{\"action\":\"produce\",\"topic\":\"topic_lbs\"}";
 
 				// 将 Map 中的键值对拼接到 JSON 字符串中
@@ -42,6 +51,9 @@ public class SimpleSpark {
 
 	private static Map<String, String> processData(Map<String, String> data) {
 		// 模拟处理逻辑
+		if(ignoreBS.contains(data.get("baseStationId"))){
+			return null;
+		}
 		return data;
 	}
 
@@ -84,21 +96,5 @@ public class SimpleSpark {
 			}
 		}
 		return map;
-	}
-}
-
-// 假设生产者接口
-class Producer {
-	public void produceMessage(String message) {
-		// 模拟将处理结果发送到另一个消息队列
-		System.out.println("Producing message: " + message);
-	}
-}
-
-// 假设消费者接口
-class Consumer {
-	public String consumeMessage() {
-		// 模拟从消息队列中获取消息
-		return "Original message";
 	}
 }
